@@ -11,7 +11,7 @@ import TransactionList from '../components/transactions/TransactionList'
 import TransactionModal from '../components/transactions/TransactionModal'
 import { useTransactions } from '../hooks/useTransactions'
 import useStore from '../store/useStore'
-import { exportToCSV, formatCurrency } from '../utils/helpers'
+import { calculateTotals, exportToCSV, formatCurrency, getTransactionType, TRANSACTION_TYPES } from '../utils/helpers'
 
 const MONTHS = [
   'January','February','March','April','May','June',
@@ -39,7 +39,7 @@ export default function TransactionsPage() {
     return transactions.filter((tx) => {
       if (filterMonth && tx.month !== filterMonth)     return false
       if (filterYear  && tx.year  !== filterYear)      return false
-      if (filterType !== 'all' && tx.type !== filterType)   return false
+      if (filterType !== 'all' && getTransactionType(tx, categories) !== filterType) return false
       if (filterCat  !== 'all' && tx.category !== filterCat) return false
       if (search) {
         const s = search.toLowerCase()
@@ -54,10 +54,7 @@ export default function TransactionsPage() {
   }, [transactions, filterMonth, filterYear, filterType, filterCat, search, categories])
 
   // Totals for filtered set
-  const filteredTotals = useMemo(() => ({
-    expenses: filtered.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
-    savings:  filtered.filter((t) => t.type === 'saving').reduce((s, t) => s + t.amount, 0),
-  }), [filtered])
+  const filteredTotals = useMemo(() => calculateTotals(filtered, categories), [filtered, categories])
 
   const openAdd  = () => { setEditData(null); setModalOpen(true) }
   const openEdit = (tx) => { setEditData(tx); setModalOpen(true) }
@@ -92,14 +89,17 @@ export default function TransactionsPage() {
               {filtered.length} transaction{filtered.length !== 1 ? 's' : ''} shown
             </p>
             <div className="flex items-center gap-4 mt-1">
+              <span className="text-xs font-mono text-brand-600">
+                +{formatCurrency(filteredTotals.income)}
+              </span>
               <span className="text-xs font-mono text-danger-500">
                 −{formatCurrency(filteredTotals.expenses)}
               </span>
-              <span className="text-xs font-mono text-brand-600">
-                +{formatCurrency(filteredTotals.savings)}
+              <span className="text-xs font-mono text-cyan-600">
+                −{formatCurrency(filteredTotals.savings)}
               </span>
               <span className="text-xs font-mono font-semibold text-surface-700 dark:text-surface-300">
-                Net: {formatCurrency(filteredTotals.savings - filteredTotals.expenses)}
+                Balance: {formatCurrency(filteredTotals.balance)}
               </span>
             </div>
           </div>
@@ -133,8 +133,9 @@ export default function TransactionsPage() {
               <label className="block text-xs font-medium text-surface-500 mb-1">Type</label>
               <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="input-base py-2 text-sm w-auto">
                 <option value="all">All</option>
-                <option value="expense">Expenses</option>
-                <option value="saving">Savings</option>
+                {TRANSACTION_TYPES.map((type) => (
+                  <option key={type.id} value={type.id}>{type.label}</option>
+                ))}
               </select>
             </div>
 

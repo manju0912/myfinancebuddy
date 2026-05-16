@@ -9,7 +9,7 @@ import { formatCurrency } from '../../utils/helpers'
 
 const CONFIG = {
   balance: {
-    label:   'Total Balance',
+    label:   'Account Balance',
     icon:    Wallet,
     gradient: 'from-brand-500 to-brand-600',
     bg:      'bg-gradient-to-br from-brand-500 to-brand-600',
@@ -31,12 +31,12 @@ const CONFIG = {
   savings: {
     label:   'Total Savings',
     icon:    TrendingUp,
-    gradient: 'from-brand-500 to-brand-600',
+    gradient: 'from-cyan-500 to-cyan-600',
     bg:      'bg-white dark:bg-surface-900',
     text:    'text-surface-900 dark:text-white',
     sub:     'text-surface-500 dark:text-surface-400',
-    iconBg:  'bg-brand-50 dark:bg-brand-900/30',
-    iconColor: 'text-brand-500',
+    iconBg:  'bg-cyan-50 dark:bg-cyan-900/30',
+    iconColor: 'text-cyan-600 dark:text-cyan-400',
     border:  'border border-surface-100 dark:border-surface-800',
   },
 }

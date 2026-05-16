@@ -3,7 +3,38 @@
 // Pure utility functions used across the app.
 // ============================================================
 
-import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns'
+import { format, eachMonthOfInterval, subMonths } from 'date-fns'
+
+export const TRANSACTION_TYPES = [
+  { id: 'income',  label: 'Account Balance', shortLabel: 'Income', icon: '💼' },
+  { id: 'expense', label: 'Expense',         shortLabel: 'Expense', icon: '💸' },
+  { id: 'saving',  label: 'Saving',          shortLabel: 'Saving', icon: '📈' },
+]
+
+export function getTypeMeta(type) {
+  return TRANSACTION_TYPES.find((t) => t.id === type) || TRANSACTION_TYPES[1]
+}
+
+export function getTransactionType(tx, categories = []) {
+  if (tx.type !== 'saving') return tx.type
+  const cat = categories.find((c) => c.id === tx.category)
+  return cat?.type === 'income' ? 'income' : 'saving'
+}
+
+export function getSignedAmount(tx, categories = []) {
+  return getTransactionType(tx, categories) === 'income' ? tx.amount : -tx.amount
+}
+
+export function calculateTotals(transactions, categories = []) {
+  return transactions.reduce((totals, tx) => {
+    const type = getTransactionType(tx, categories)
+    if (type === 'income') totals.income += tx.amount
+    if (type === 'expense') totals.expenses += tx.amount
+    if (type === 'saving') totals.savings += tx.amount
+    totals.balance += getSignedAmount(tx, categories)
+    return totals
+  }, { income: 0, expenses: 0, savings: 0, balance: 0 })
+}
 
 // ── Currency formatting ──────────────────────────────────────
 export function formatCurrency(amount, currency = 'INR', compact = false) {
@@ -42,13 +73,12 @@ export function getLast12Months() {
 /**
  * Aggregate transactions into monthly bar chart data.
  */
-export function buildMonthlyData(transactions) {
+export function buildMonthlyData(transactions, categories = []) {
   const months = getLast12Months()
   return months.map(({ month, year, label }) => {
     const txs = transactions.filter((t) => t.month === month && t.year === year)
-    const expenses = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-    const savings  = txs.filter((t) => t.type === 'saving').reduce((s, t) => s + t.amount, 0)
-    return { label, month, year, expenses, savings }
+    const { income, expenses, savings } = calculateTotals(txs, categories)
+    return { label, month, year, income, expenses, savings }
   })
 }
 
@@ -76,15 +106,14 @@ export function buildCategoryData(transactions, categories) {
 /**
  * Build line chart trend data.
  */
-export function buildTrendData(transactions) {
+export function buildTrendData(transactions, categories = []) {
   const months = getLast12Months()
   let cumBalance = 0
   return months.map(({ month, year, label }) => {
     const txs = transactions.filter((t) => t.month === month && t.year === year)
-    const exp = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-    const sav = txs.filter((t) => t.type === 'saving').reduce((s, t) => s + t.amount, 0)
-    cumBalance += sav - exp
-    return { label, expenses: exp, savings: sav, balance: parseFloat(cumBalance.toFixed(2)) }
+    const { income, expenses, savings, balance } = calculateTotals(txs, categories)
+    cumBalance += balance
+    return { label, income, expenses, savings, balance: parseFloat(cumBalance.toFixed(2)) }
   })
 }
 
@@ -95,7 +124,7 @@ export function exportToCSV(transactions, categories) {
     const cat = categories.find((c) => c.id === tx.category)
     return [
       tx.date,
-      tx.type,
+      getTransactionType(tx, categories),
       cat?.name || tx.category,
       tx.amount,
       `"${(tx.notes || '').replace(/"/g, '""')}"`,

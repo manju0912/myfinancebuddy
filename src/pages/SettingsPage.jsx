@@ -9,7 +9,7 @@ import AppLayout from '../components/layout/AppLayout'
 import TopBar from '../components/layout/TopBar'
 import useStore, { DEFAULT_CATEGORIES } from '../store/useStore'
 import { addCategory, deleteCategory } from '../services/transactionService'
-import { exportToCSV, formatCurrency } from '../utils/helpers'
+import { exportToCSV, formatCurrency, getTypeMeta, TRANSACTION_TYPES } from '../utils/helpers'
 
 const EMOJI_OPTIONS = ['🍕','🚗','⚡','🛒','🏥','🎮','📚','✈️','💼','📈','💻','🎁','💰','🏠','🎬','🎵','🏋️','🌐','📱','🎯']
 
@@ -144,9 +144,11 @@ export default function SettingsPage() {
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       cat.type === 'expense'
                         ? 'bg-danger-50 dark:bg-danger-900/30 text-danger-600 dark:text-danger-400'
+                        : cat.type === 'saving'
+                        ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400'
                         : 'bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400'
                     }`}>
-                      {cat.type}
+                      {getTypeMeta(cat.type).shortLabel}
                     </span>
                     <button
                       onClick={() => handleDeleteCat(cat.id)}
@@ -183,8 +185,9 @@ export default function SettingsPage() {
                 onChange={(e) => setNewCat((f) => ({ ...f, type: e.target.value }))}
                 className="input-base text-sm"
               >
-                <option value="expense">Expense</option>
-                <option value="saving">Saving</option>
+                {TRANSACTION_TYPES.map((type) => (
+                  <option key={type.id} value={type.id}>{type.label}</option>
+                ))}
               </select>
 
               <div className="flex items-center gap-2">

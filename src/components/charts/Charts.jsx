@@ -66,7 +66,7 @@ export function CategoryPieChart({ data }) {
   )
 }
 
-// ── Bar Chart (monthly spending vs savings) ──────────────────
+// ── Bar Chart (monthly income, expenses, and savings) ────────
 export function MonthlyBarChart({ data }) {
   if (!data?.length) return <EmptyChart />
 
@@ -81,7 +81,7 @@ export function MonthlyBarChart({ data }) {
           axisLine={false}
         />
         <YAxis
-          tickFormatter={(v) => `$${v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}`}
+          tickFormatter={(v) => `₹${v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}`}
           tick={{ fontSize: 11 }}
           tickLine={false}
           axisLine={false}
@@ -97,8 +97,9 @@ export function MonthlyBarChart({ data }) {
             <span className="text-xs font-medium capitalize">{value}</span>
           )}
         />
-        <Bar dataKey="expenses" name="Expenses" fill="#f43f5e" radius={[6, 6, 0, 0]} />
-        <Bar dataKey="savings"  name="Savings"  fill="#22c55e" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="income"   name="Account Balance" fill="#22c55e" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="expenses" name="Expenses"        fill="#f43f5e" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="savings"  name="Savings"         fill="#06b6d4" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )
@@ -120,6 +121,10 @@ export function TrendLineChart({ data }) {
             <stop offset="5%"  stopColor="#f43f5e" stopOpacity={0.2} />
             <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
           </linearGradient>
+          <linearGradient id="gradSav" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%"  stopColor="#06b6d4" stopOpacity={0.18} />
+            <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+          </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-surface-100 dark:text-surface-800" vertical={false} />
         <XAxis
@@ -129,7 +134,7 @@ export function TrendLineChart({ data }) {
           axisLine={false}
         />
         <YAxis
-          tickFormatter={(v) => `$${v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}`}
+          tickFormatter={(v) => `₹${v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}`}
           tick={{ fontSize: 11 }}
           tickLine={false}
           axisLine={false}
@@ -143,6 +148,7 @@ export function TrendLineChart({ data }) {
         <Legend />
         <Area type="monotone" dataKey="balance"  name="Balance"  stroke="#22c55e" fill="url(#gradBalance)" strokeWidth={2} dot={false} />
         <Area type="monotone" dataKey="expenses" name="Expenses" stroke="#f43f5e" fill="url(#gradExp)"     strokeWidth={2} dot={false} />
+        <Area type="monotone" dataKey="savings"  name="Savings"  stroke="#06b6d4" fill="url(#gradSav)"     strokeWidth={2} dot={false} />
       </AreaChart>
     </ResponsiveContainer>
   )

@@ -4,12 +4,12 @@
 // ============================================================
 
 import React, { useState, useEffect } from 'react'
-import { X, DollarSign, Tag, Calendar, FileText, Check } from 'lucide-react'
-import useStore, { DEFAULT_CATEGORIES } from '../../store/useStore'
-import { todayISO } from '../../utils/helpers'
+import { X, IndianRupee, Calendar, FileText, Check } from 'lucide-react'
+import useStore from '../../store/useStore'
+import { getTypeMeta, todayISO, TRANSACTION_TYPES } from '../../utils/helpers'
 
 const INIT = {
-  type:     'expense',
+  type:     'income',
   amount:   '',
   category: '',
   date:     todayISO(),
@@ -26,7 +26,10 @@ export default function TransactionModal({ open, onClose, onSubmit, editData }) 
 
   // Pre-fill when editing
   useEffect(() => {
-    if (editData) setForm({ ...INIT, ...editData })
+    if (editData) {
+      const catType = allCategories.find((c) => c.id === editData.category)?.type
+      setForm({ ...INIT, ...editData, type: catType || editData.type })
+    }
     else setForm(INIT)
     setErrors({})
   }, [editData, open])
@@ -97,22 +100,24 @@ export default function TransactionModal({ open, onClose, onSubmit, editData }) 
         <form onSubmit={handleSubmit} className="px-6 pb-6 pt-2 space-y-4">
           {/* Type toggle */}
           <div className="flex rounded-xl overflow-hidden border border-surface-200 dark:border-surface-700 p-1 bg-surface-50 dark:bg-surface-800">
-            {['expense', 'saving'].map((t) => (
+            {TRANSACTION_TYPES.map(({ id, label, icon }) => (
               <button
-                key={t}
+                key={id}
                 type="button"
-                onClick={() => set('type', t)}
+                onClick={() => set('type', id)}
                 className={`
                   flex-1 py-2 rounded-lg text-sm font-semibold font-display capitalize transition-all
-                  ${form.type === t
-                    ? t === 'expense'
+                  ${form.type === id
+                    ? id === 'expense'
                       ? 'bg-danger-500 text-white shadow-sm'
+                      : id === 'saving'
+                      ? 'bg-cyan-600 text-white shadow-sm'
                       : 'bg-brand-500 text-white shadow-sm'
                     : 'text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200'
                   }
                 `}
               >
-                {t === 'expense' ? '💸 Expense' : '💰 Saving'}
+                {icon} {label}
               </button>
             ))}
           </div>
@@ -123,7 +128,7 @@ export default function TransactionModal({ open, onClose, onSubmit, editData }) 
               Amount
             </label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
+              <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
               <input
                 type="number"
                 min="0"
@@ -164,6 +169,11 @@ export default function TransactionModal({ open, onClose, onSubmit, editData }) 
                 </button>
               ))}
             </div>
+            {filteredCats.length === 0 && (
+              <p className="text-xs text-surface-400 mt-1">
+                Add a {getTypeMeta(form.type).shortLabel.toLowerCase()} category in Settings first.
+              </p>
+            )}
             {errors.category && <p className="text-xs text-danger-500 mt-1">{errors.category}</p>}
           </div>
 

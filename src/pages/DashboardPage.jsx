@@ -15,9 +15,12 @@ import TransactionModal from '../components/transactions/TransactionModal'
 import { useTransactions } from '../hooks/useTransactions'
 import { MonthlyBarChart } from '../components/charts/Charts'
 import { buildMonthlyData } from '../utils/helpers'
+import useStore from '../store/useStore'
 
 export default function DashboardPage() {
   const { transactions, totals, monthlyComparison, create, update, remove } = useTransactions()
+  const { getAllCategories } = useStore()
+  const categories = getAllCategories()
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editData,  setEditData]  = useState(null)
@@ -35,7 +38,7 @@ export default function DashboardPage() {
     if (window.confirm('Delete this transaction?')) await remove(id)
   }
 
-  const monthlyData = buildMonthlyData(transactions)
+  const monthlyData = buildMonthlyData(transactions, categories)
   const recent = transactions.slice(0, 8)
 
   return (
@@ -70,7 +73,7 @@ export default function DashboardPage() {
 
         {/* Monthly overview chart */}
         <div className="card p-5">
-          <h2 className="section-title mb-4">Monthly Overview</h2>
+          <h2 className="section-title mb-4">Monthly Cash Flow</h2>
           <MonthlyBarChart data={monthlyData} />
         </div>
 

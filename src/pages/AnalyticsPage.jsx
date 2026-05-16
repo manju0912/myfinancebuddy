@@ -7,7 +7,7 @@ import React, { useState, useMemo } from 'react'
 import AppLayout from '../components/layout/AppLayout'
 import TopBar from '../components/layout/TopBar'
 import { CategoryPieChart, MonthlyBarChart, TrendLineChart } from '../components/charts/Charts'
-import { buildCategoryData, buildMonthlyData, buildTrendData, formatCurrency } from '../utils/helpers'
+import { buildCategoryData, buildMonthlyData, buildTrendData, calculateTotals, formatCurrency, getTransactionType } from '../utils/helpers'
 import useStore from '../store/useStore'
 
 const MONTHS = [
@@ -18,6 +18,12 @@ const MONTHS = [
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i)
 
+const ANALYTICS_TABS = [
+  { id: 'overview', label: 'Overview', icon: '📊' },
+  { id: 'expense',  label: 'Expenses', icon: '💸' },
+  { id: 'saving',   label: 'Savings',  icon: '📈' },
+]
+
 export default function AnalyticsPage() {
   const { transactions, getAllCategories } = useStore()
   const categories = getAllCategories()
@@ -25,26 +31,30 @@ export default function AnalyticsPage() {
   // Filters state
   const [filterMonth, setFilterMonth] = useState(0)          // 0 = all
   const [filterYear,  setFilterYear]  = useState(0)          // 0 = all
-  const [filterType,  setFilterType]  = useState('expense')
+  const [filterType,  setFilterType]  = useState('overview')
 
   // Apply filters
   const filtered = useMemo(() => {
     return transactions.filter((tx) => {
       if (filterMonth && tx.month !== filterMonth) return false
       if (filterYear  && tx.year  !== filterYear)  return false
-      if (filterType  && tx.type  !== filterType)  return false
+      if (filterType !== 'overview' && getTransactionType(tx, categories) !== filterType) return false
       return true
     })
-  }, [transactions, filterMonth, filterYear, filterType])
+  }, [transactions, filterMonth, filterYear, filterType, categories])
 
   // Chart data
   const pieData  = useMemo(() => buildCategoryData(filtered, categories), [filtered, categories])
-  const barData  = useMemo(() => buildMonthlyData(transactions), [transactions])
-  const lineData = useMemo(() => buildTrendData(transactions),   [transactions])
+  const barData  = useMemo(() => buildMonthlyData(transactions, categories), [transactions, categories])
+  const lineData = useMemo(() => buildTrendData(transactions, categories),   [transactions, categories])
 
   // Top categories summary
   const topCategories = pieData.slice(0, 5)
-  const totalFiltered = filtered.reduce((s, t) => s + t.amount, 0)
+  const filteredTotals = useMemo(() => calculateTotals(filtered, categories), [filtered, categories])
+  const totalFiltered = filterType === 'overview'
+    ? Math.abs(filteredTotals.income) + filteredTotals.expenses + filteredTotals.savings
+    : filtered.reduce((s, t) => s + t.amount, 0)
+  const displayedTotal = filterType === 'overview' ? filteredTotals.balance : totalFiltered
 
   return (
     <AppLayout>
@@ -59,19 +69,21 @@ export default function AnalyticsPage() {
 
             {/* Type */}
             <div className="flex rounded-xl overflow-hidden border border-surface-200 dark:border-surface-700 p-1 bg-surface-50 dark:bg-surface-800">
-              {['expense', 'saving'].map((t) => (
+              {ANALYTICS_TABS.map((type) => (
                 <button
-                  key={t}
-                  onClick={() => setFilterType(t)}
+                  key={type.id}
+                  onClick={() => setFilterType(type.id)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
-                    filterType === t
-                      ? t === 'expense'
+                    filterType === type.id
+                      ? type.id === 'expense'
                         ? 'bg-danger-500 text-white shadow-sm'
+                        : type.id === 'saving'
+                        ? 'bg-cyan-600 text-white shadow-sm'
                         : 'bg-brand-500 text-white shadow-sm'
                       : 'text-surface-500 dark:text-surface-400'
                   }`}
                 >
-                  {t === 'expense' ? '💸 Expenses' : '💰 Savings'}
+                  {type.icon} {type.label}
                 </button>
               ))}
             </div>
@@ -111,11 +123,17 @@ export default function AnalyticsPage() {
 
             {/* Total */}
             <div className="ml-auto">
-              <span className="text-xs text-surface-500 dark:text-surface-400">Filtered total: </span>
+              <span className="text-xs text-surface-500 dark:text-surface-400">
+                {filterType === 'overview' ? 'Net balance: ' : 'Filtered total: '}
+              </span>
               <span className={`font-mono font-semibold text-sm ${
-                filterType === 'expense' ? 'text-danger-500' : 'text-brand-600'
+                filterType === 'expense'
+                  ? 'text-danger-500'
+                  : filterType === 'saving'
+                  ? 'text-cyan-600'
+                  : 'text-brand-600'
               }`}>
-                {formatCurrency(totalFiltered)}
+                {formatCurrency(displayedTotal)}
               </span>
             </div>
           </div>
@@ -128,7 +146,7 @@ export default function AnalyticsPage() {
           <div className="card p-5">
             <h2 className="section-title mb-1">Category Breakdown</h2>
             <p className="text-xs text-surface-400 mb-4">
-              {filterType === 'expense' ? 'Expense' : 'Saving'} distribution by category
+              {filterType === 'overview' ? 'All money movement' : ANALYTICS_TABS.find((type) => type.id === filterType)?.label} by category
             </p>
             <CategoryPieChart data={pieData} />
 
@@ -159,8 +177,8 @@ export default function AnalyticsPage() {
 
           {/* Bar chart */}
           <div className="card p-5">
-            <h2 className="section-title mb-1">Monthly Spending vs Savings</h2>
-            <p className="text-xs text-surface-400 mb-4">Last 12 months comparison</p>
+            <h2 className="section-title mb-1">Monthly Cash Flow</h2>
+            <p className="text-xs text-surface-400 mb-4">Income, expenses, and savings for the last 12 months</p>
             <MonthlyBarChart data={barData} />
           </div>
 

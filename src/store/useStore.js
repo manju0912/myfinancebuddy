@@ -17,11 +17,14 @@ export const DEFAULT_CATEGORIES = [
   { id: 'education',   name: 'Education',        icon: '📚', color: '#6366f1', type: 'expense' },
   { id: 'travel',      name: 'Travel',           icon: '✈️', color: '#0ea5e9', type: 'expense' },
   { id: 'other_exp',   name: 'Other',            icon: '💸', color: '#94a3b8', type: 'expense' },
-  { id: 'salary',      name: 'Salary',           icon: '💼', color: '#22c55e', type: 'saving' },
+  { id: 'salary',      name: 'Salary',           icon: '💼', color: '#22c55e', type: 'income' },
+  { id: 'freelance',   name: 'Freelance',        icon: '💻', color: '#84cc16', type: 'income' },
+  { id: 'gift',        name: 'Gift / Bonus',     icon: '🎁', color: '#34d399', type: 'income' },
+  { id: 'other_sav',   name: 'Other Income',     icon: '💰', color: '#4ade80', type: 'income' },
   { id: 'investment',  name: 'Investment',       icon: '📈', color: '#10b981', type: 'saving' },
-  { id: 'freelance',   name: 'Freelance',        icon: '💻', color: '#84cc16', type: 'saving' },
-  { id: 'gift',        name: 'Gift / Bonus',     icon: '🎁', color: '#34d399', type: 'saving' },
-  { id: 'other_sav',   name: 'Other Income',     icon: '💰', color: '#4ade80', type: 'saving' },
+  { id: 'fixed_deposit',name: 'Fixed Deposit',   icon: '🏦', color: '#06b6d4', type: 'saving' },
+  { id: 'mutual_fund', name: 'Mutual Fund',      icon: '📊', color: '#0f766e', type: 'saving' },
+  { id: 'other_saving',name: 'Other Saving',     icon: '🎯', color: '#14b8a6', type: 'saving' },
 ]
 
 const useStore = create(

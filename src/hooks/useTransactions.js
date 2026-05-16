@@ -10,6 +10,7 @@ import {
   updateTransaction as updateTxSvc,
   deleteTransaction as deleteTxSvc,
 } from '../services/transactionService'
+import { calculateTotals, getTransactionType } from '../utils/helpers'
 
 /**
  * Provides transaction data + helpers.
@@ -25,7 +26,10 @@ export function useTransactions(filters = {}) {
     removeTransaction,
     setLoading,
     setError,
+    getAllCategories,
   } = useStore()
+
+  const categories = getAllCategories()
 
   // ── Filtered list ────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -33,7 +37,7 @@ export function useTransactions(filters = {}) {
       if (filters.month    && tx.month    !== filters.month)    return false
       if (filters.year     && tx.year     !== filters.year)     return false
       if (filters.category && tx.category !== filters.category) return false
-      if (filters.type     && tx.type     !== filters.type)     return false
+      if (filters.type && getTransactionType(tx, categories) !== filters.type) return false
       if (filters.search) {
         const s = filters.search.toLowerCase()
         if (
@@ -43,22 +47,12 @@ export function useTransactions(filters = {}) {
       }
       return true
     })
-  }, [transactions, filters])
+  }, [transactions, filters, categories])
 
   // ── Aggregates ───────────────────────────────────────────
   const totals = useMemo(() => {
-    const expenses = transactions
-      .filter((t) => t.type === 'expense')
-      .reduce((s, t) => s + t.amount, 0)
-    const savings = transactions
-      .filter((t) => t.type === 'saving')
-      .reduce((s, t) => s + t.amount, 0)
-    return {
-      expenses,
-      savings,
-      balance: savings - expenses,
-    }
-  }, [transactions])
+    return calculateTotals(transactions, categories)
+  }, [transactions, categories])
 
   // ── Monthly comparison (current vs previous month) ───────
   const monthlyComparison = useMemo(() => {
@@ -70,7 +64,7 @@ export function useTransactions(filters = {}) {
 
     const sum = (m, y, type) =>
       transactions
-        .filter((t) => t.month === m && t.year === y && t.type === type)
+        .filter((t) => t.month === m && t.year === y && getTransactionType(t, categories) === type)
         .reduce((s, t) => s + t.amount, 0)
 
     const curExp  = sum(curMonth,  curYear,  'expense')
@@ -78,7 +72,7 @@ export function useTransactions(filters = {}) {
     const pct = prevExp === 0 ? 0 : ((curExp - prevExp) / prevExp) * 100
 
     return { curExp, prevExp, percentChange: pct.toFixed(1) }
-  }, [transactions])
+  }, [transactions, categories])
 
   // ── CRUD ─────────────────────────────────────────────────
   const create = async (data) => {

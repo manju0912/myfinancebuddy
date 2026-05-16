@@ -4,9 +4,9 @@
 // ============================================================
 
 import React, { useState } from 'react'
-import { Pencil, Trash2, Search, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { Pencil, Trash2, Search, SlidersHorizontal } from 'lucide-react'
 import useStore from '../../store/useStore'
-import { formatCurrency, formatDate } from '../../utils/helpers'
+import { formatCurrency, formatDate, getTransactionType, TRANSACTION_TYPES } from '../../utils/helpers'
 
 export default function TransactionList({
   transactions,
@@ -26,7 +26,7 @@ export default function TransactionList({
   // Apply local filters
   const filtered = transactions
     .filter((tx) => {
-      if (typeFilter !== 'all' && tx.type !== typeFilter) return false
+      if (typeFilter !== 'all' && getTransactionType(tx, categories) !== typeFilter) return false
       if (catFilter  !== 'all' && tx.category !== catFilter) return false
       if (search) {
         const s = search.toLowerCase()
@@ -77,8 +77,9 @@ export default function TransactionList({
             className="input-base py-1.5 w-auto text-xs"
           >
             <option value="all">All Types</option>
-            <option value="expense">Expenses</option>
-            <option value="saving">Savings</option>
+            {TRANSACTION_TYPES.map((type) => (
+              <option key={type.id} value={type.id}>{type.label}</option>
+            ))}
           </select>
           <select
             value={catFilter}
@@ -112,6 +113,8 @@ export default function TransactionList({
         <div className="space-y-2">
           {filtered.map((tx) => {
             const cat = getCat(tx.category)
+            const type = getTransactionType(tx, categories)
+            const isIncome = type === 'income'
             return (
               <div
                 key={tx.id}
@@ -144,11 +147,13 @@ export default function TransactionList({
 
                 {/* Amount */}
                 <span className={`font-mono font-semibold text-sm ${
-                  tx.type === 'expense'
+                  type === 'expense'
                     ? 'text-danger-500 dark:text-danger-400'
+                    : type === 'saving'
+                    ? 'text-cyan-600 dark:text-cyan-400'
                     : 'text-brand-600 dark:text-brand-400'
                 }`}>
-                  {tx.type === 'expense' ? '−' : '+'}{formatCurrency(tx.amount)}
+                  {isIncome ? '+' : '−'}{formatCurrency(tx.amount)}
                 </span>
 
                 {/* Actions */}
