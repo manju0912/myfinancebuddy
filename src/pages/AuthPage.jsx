@@ -195,7 +195,12 @@ function friendlyError(code) {
     'auth/weak-password':     'Password must be at least 6 characters.',
     'auth/invalid-email':     'Please enter a valid email address.',
     'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
+    'auth/popup-blocked':     'Google sign-in popup was blocked. Allow popups for this site and try again.',
+    'auth/operation-not-allowed': 'Google sign-in is not enabled in Firebase Authentication.',
+    'auth/unauthorized-domain': 'This domain is not authorized in Firebase Authentication.',
+    'auth/invalid-api-key':    'Firebase API key is invalid. Check your .env Firebase config.',
+    'auth/configuration-not-found': 'Firebase Authentication is not configured for this project.',
     'auth/network-request-failed': 'Network error. Check your connection.',
   }
-  return map[code] || 'Something went wrong. Please try again.'
+  return map[code] || `Something went wrong${code ? ` (${code})` : ''}. Please try again.`
 }
