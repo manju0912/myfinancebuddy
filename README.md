@@ -30,8 +30,8 @@ A modern, full-stack personal finance tracker built with React + Firebase.
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/you/flowtrack.git
-cd flowtrack
+git clone https://github.com/manju0912/myfinancebuddy.git
+cd myfinancebuddy
 npm install
 ```
 
