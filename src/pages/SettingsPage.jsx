@@ -60,14 +60,32 @@ export default function SettingsPage() {
 
   // ── Budget limits ──────────────────────────────────────────
   const [budgetForm, setBudgetForm] = useState({})
+  const [editingBudget, setEditingBudget] = useState({})
 
   const expenseCategories = allCategories.filter((c) => c.type === 'expense')
+
+  const handleEditBudget = (catId, current) => {
+    setBudgetForm((f) => ({ ...f, [catId]: current }))
+    setEditingBudget((f) => ({ ...f, [catId]: true }))
+  }
+
+  const handleCancelBudgetEdit = (catId) => {
+    setBudgetForm((f) => ({ ...f, [catId]: '' }))
+    setEditingBudget((f) => {
+      const { [catId]: _, ...rest } = f
+      return rest
+    })
+  }
 
   const handleSetBudget = (catId) => {
     const val = budgetForm[catId]
     if (!val || isNaN(val) || +val <= 0) return
     setBudgetLimit(catId, val)
     setBudgetForm((f) => ({ ...f, [catId]: '' }))
+    setEditingBudget((f) => {
+      const { [catId]: _, ...rest } = f
+      return rest
+    })
   }
 
   // ── Export ─────────────────────────────────────────────────
@@ -243,11 +261,17 @@ export default function SettingsPage() {
                   <span className="text-lg w-8 text-center flex-shrink-0">{cat.icon}</span>
                   <span className="text-sm text-surface-700 dark:text-surface-300 flex-1 truncate">{cat.name}</span>
 
-                  {current ? (
+                  {current && !editingBudget[cat.id] ? (
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono font-semibold text-brand-600 dark:text-brand-400">
                         {formatCurrency(current)}/mo
                       </span>
+                      <button
+                        onClick={() => handleEditBudget(cat.id, current)}
+                        className="btn-secondary py-1.5 px-3 text-xs"
+                      >
+                        Edit
+                      </button>
                       <button
                         onClick={() => removeBudgetLimit(cat.id)}
                         className="p-1 rounded-lg text-surface-400 hover:text-danger-500 transition-colors"
@@ -270,8 +294,16 @@ export default function SettingsPage() {
                         onClick={() => handleSetBudget(cat.id)}
                         className="btn-primary py-1.5 px-3 text-xs"
                       >
-                        Set
+                        {current ? 'Update' : 'Set'}
                       </button>
+                      {current && (
+                        <button
+                          onClick={() => handleCancelBudgetEdit(cat.id)}
+                          className="btn-secondary py-1.5 px-3 text-xs"
+                        >
+                          Cancel
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

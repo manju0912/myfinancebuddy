@@ -91,6 +91,10 @@ const useStore = create(
       sidebarOpen: true,
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
 
+      // Auth initialization
+      authReady: false,
+      setAuthReady: (ready) => set({ authReady: ready }),
+
       // Loading / error
       loading: false,
       setLoading: (loading) => set({ loading }),

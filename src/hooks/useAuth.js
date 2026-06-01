@@ -15,7 +15,7 @@ import { fetchTransactions, fetchCategories } from '../services/transactionServi
  * When they log out, clear the store.
  */
 export function useAuth() {
-  const { setUser, setTransactions, setCustomCategories, setLoading, darkMode } = useStore()
+  const { setUser, setTransactions, setCustomCategories, setLoading, setAuthReady, darkMode } = useStore()
 
   useEffect(() => {
     // Apply saved dark-mode preference on mount
@@ -41,12 +41,14 @@ export function useAuth() {
           console.error('Error loading user data:', err)
         } finally {
           setLoading(false)
+          setAuthReady(true)
         }
       } else {
         // Logged out — clear user data
         setUser(null)
         setTransactions([])
         setCustomCategories([])
+        setAuthReady(true)
       }
     })
 

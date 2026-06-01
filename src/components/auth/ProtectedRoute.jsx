@@ -9,10 +9,10 @@ import useStore from '../../store/useStore'
 import { Wallet } from 'lucide-react'
 
 export default function ProtectedRoute({ children }) {
-  const { user, loading } = useStore()
+  const { user, loading, authReady } = useStore()
 
   // Show spinner while Firebase resolves auth state
-  if (loading && !user) {
+  if (!authReady || (loading && !user)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-surface-50 dark:bg-surface-950">
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-glow-green">
